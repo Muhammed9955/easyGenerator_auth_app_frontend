@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { api } from "@/lib/utils";
 import Cookies from "js-cookie";
+import { AxiosError } from "axios";
 
 const signUpSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -68,8 +69,14 @@ export default function SignUpPage() {
       if (response.status === 201) {
         router.push("/signin");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Sign up failed");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || "Sign in failed");
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("SignUp failed");
+      }
     } finally {
       setIsLoading(false);
     }

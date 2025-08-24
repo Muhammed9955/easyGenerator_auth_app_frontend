@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import Cookies from "js-cookie";
 import { api } from "@/lib/utils";
+import { AxiosError } from "axios";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -46,7 +47,7 @@ export default function SignInPage() {
       router.push("/");
       return;
     }
-  }, [token, router]);
+  }, [router, token]);
 
   const onSubmit = async (data: SignInForm) => {
     setIsLoading(true);
@@ -60,8 +61,14 @@ export default function SignInPage() {
       document.cookie = `token=${token}; max-age=${7 * 24 * 60 * 60}; path=/`;
 
       router.push("/");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Sign in failed");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data?.message || "Sign in failed");
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Sign in failed");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +126,7 @@ export default function SignInPage() {
           </form>
 
           <div className="mt-4 text-center text-sm">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="underline">
               Sign up
             </Link>
